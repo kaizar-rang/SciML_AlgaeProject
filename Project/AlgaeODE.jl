@@ -2,7 +2,7 @@ using JLD, Lux, DiffEqFlux, DifferentialEquations, Optimization, OptimizationOpt
 using ComponentArrays, OptimizationOptimisers
 
 # Number of days to simulate
-N_days = 300
+N_days = 300 #test
 
 # Initial conditions for algae biomass and nutrients
 A0 = 0.01  # Initial algae concentration
