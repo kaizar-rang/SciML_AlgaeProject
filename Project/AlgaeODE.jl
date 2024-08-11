@@ -63,15 +63,18 @@ function loss_neuralode(p)
     return loss, pred
 end
 
+epoch_counter = Ref(0)
+
 # Callback to observe training
 callback = function (p, l, pred; doplot=true)
-    display("Current Loss: $(l)")
+    epoch_counter[] += 1  # Increment the epoch counter
+    display("Epoch: $(epoch_counter[]), Current Loss: $(l)")  # Display the epoch and the current loss
     if doplot
-        plt = plot(t, sol[1, :], label="Data", title="Prediction vs. Data", xlabel="Time (days)", ylabel="Concentration")
+        plt = plot(t, sol[1, :], label="Data", title="Epoch: $(epoch_counter[]) - Prediction vs. Data", xlabel="Time (days)", ylabel="Concentration")
         plot!(plt, t, pred[1, :], linestyle=:dash, label="Prediction")
         display(plot(plt))
     end
-    return false
+    return false  # Return false to continue training
 end
 
 # Initialize parameters
@@ -83,4 +86,4 @@ optf = Optimization.OptimizationFunction((x, p) -> loss_neuralode(x), adtype)
 optprob = Optimization.OptimizationProblem(optf, pinit)
 
 # Train the model
-result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0. 1), callback=callback, maxiters=1000)
+result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.01), callback=callback, maxiters=1000)
