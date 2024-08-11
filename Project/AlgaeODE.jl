@@ -1,3 +1,22 @@
+using JLD, Lux, DiffEqFlux, DifferentialEquations, Optimization, OptimizationOptimJL, Random, Plots, ComponentArrays, OptimizationOptimisers
+
+# Adjusted number of days to simulate and number of data points
+N_days = 50  # Keep the original duration to see the full model behavior
+datasize = 40  # Desired number of data points
+
+# Initial conditions for algae biomass and nutrients
+A0 = 0.01  # Initial algae concentration
+N0 = 1.0   # Initial nutrient concentration
+u0 = [A0, N0]  # [Algae, Nutrient]
+
+# Adjusted parameters for the model to fit significant dynamics into fewer data points
+p0 = Float64[
+    0.5,  # Increased r - Intrinsic growth rate to accelerate algae growth
+    1.0,  # K - Carrying capacity
+    0.5,  # k - Half-saturation constant for nutrient uptake
+    0.05, # Increased dN - Nutrient depletion rate to accelerate nutrient consumption
+]
+
 # Time span for simulation
 tspan = (0.0, Float64(N_days))
 t = range(tspan[1], tspan[2], length=datasize)
@@ -26,7 +45,7 @@ ylabel!("Concentration")
 title!("Compressed Algal Bloom Growth Model")
 
 # Neural Network Architecture
-dudt_nn = Lux.Chain(Lux.Dense(2, 50, sigmoid), Lux.Dense(50, 2))
+dudt_nn = Lux.Chain(Lux.Dense(2, 50, relu), Lux.Dense(50, 2))
 p_nn, st_nn = Lux.setup(rng, dudt_nn)
 
 # Define the Neural ODE
