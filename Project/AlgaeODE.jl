@@ -1,4 +1,4 @@
-using JLD, Lux, DiffEqFlux, DifferentialEquations, Optimization, OptimizationOptimJL, Random, Plots, ComponentArrays, OptimizationOptimisers
+using JLD, Lux, DiffEqFlux, DifferentialEquations, Optimization, OptimizationOptimJL, Random, Plots, ComponentArrays, OptimizationOptimisers 
 
 # Adjusted number of days to simulate and number of data points
 N_days = 50  # Keep the original duration to see the full model behavior
@@ -16,6 +16,9 @@ p0 = Float64[
     0.5,  # k - Half-saturation constant for nutrient uptake
     0.05, # Increased dN - Nutrient depletion rate to accelerate nutrient consumption
 ]
+
+rng = Random.default_rng()
+
 
 # Time span for simulation
 tspan = (0.0, Float64(N_days))
@@ -45,8 +48,12 @@ ylabel!("Concentration")
 title!("Compressed Algal Bloom Growth Model")
 
 # Neural Network Architecture
-dudt_nn = Lux.Chain(Lux.Dense(2, 50, relu), Lux.Dense(50, 2))
-p_nn, st_nn = Lux.setup(rng, dudt_nn)
+
+Random.seed!(1234)
+dudt_nn = Lux.Chain(Lux.Dense(2, 50, tanh), Lux.Dense(50, 50, tanh), Lux.Dense(50, 2))
+p_nn, st_nn = Lux.setup(rng, dudt_nn) 
+
+
 
 # Define the Neural ODE
 proba_neuralode = NeuralODE(dudt_nn, tspan, Tsit5(), saveat=t)
@@ -62,7 +69,7 @@ function loss_neuralode(p)
     loss = sum(abs2, sol .- pred)
     return loss, pred
 end
-
+ 
 epoch_counter = Ref(0)
 
 # Callback to observe training
@@ -70,7 +77,7 @@ callback = function (p, l, pred; doplot=true)
     epoch_counter[] += 1  # Increment the epoch counter
     display("Epoch: $(epoch_counter[]), Current Loss: $(l)")  # Display the epoch and the current loss
     if doplot
-        plt = plot(t, sol[1, :], label="Data", title="Epoch: $(epoch_counter[]) - Prediction vs. Data", xlabel="Time (days)", ylabel="Concentration")
+        plt = plot(t, sol[1, :], label="Data", title= "Prediction vs. Data", xlabel="Time (days)", ylabel="Concentration")
         plot!(plt, t, pred[1, :], linestyle=:dash, label="Prediction")
         display(plot(plt))
     end
@@ -86,4 +93,4 @@ optf = Optimization.OptimizationFunction((x, p) -> loss_neuralode(x), adtype)
 optprob = Optimization.OptimizationProblem(optf, pinit)
 
 # Train the model
-result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.01), callback=callback, maxiters=1000)
+result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.001), callback=callback, maxiters=1000)
