@@ -17,7 +17,8 @@ p0 = Float64[
     0.05, # Increased dN - Nutrient depletion rate to accelerate nutrient consumption
 ]
 
-rng = Random.default_rng()
+rng = Random.MersenneTwister(1234)
+
 
 
 # Time span for simulation
@@ -49,7 +50,7 @@ title!("Compressed Algal Bloom Growth Model")
 
 # Neural Network Architecture
 
-Random.seed!(1234)
+
 dudt_nn = Lux.Chain(Lux.Dense(2, 50, tanh), Lux.Dense(50, 50, tanh), Lux.Dense(50, 2))
 p_nn, st_nn = Lux.setup(rng, dudt_nn) 
 
@@ -93,4 +94,4 @@ optf = Optimization.OptimizationFunction((x, p) -> loss_neuralode(x), adtype)
 optprob = Optimization.OptimizationProblem(optf, pinit)
 
 # Train the model
-result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.001), callback=callback, maxiters=1000)
+result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.001), callback=callback, maxiters=15000)
