@@ -94,4 +94,4 @@ optf = Optimization.OptimizationFunction((x, p) -> loss_neuralode(x), adtype)
 optprob = Optimization.OptimizationProblem(optf, pinit)
 
 # Train the model
-result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.001), callback=callback, maxiters=15000)
+result_neuralode = Optimization.solve(optprob, OptimizationOptimisers.Adam(0.001), callback=callback, maxiters=20000)
