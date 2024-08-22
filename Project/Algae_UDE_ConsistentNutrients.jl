@@ -43,5 +43,5 @@ plot(t, sol[1, :], label="Algae Concentration A(t)")
 plot!(t, sol[2, :], label="Nutrient Concentration N(t)")
 xlabel!("Time (days)")
 ylabel!("Concentration")
-title!("Compressed Algal Bloom Growth Model")
+title!("Compressed Algal Bloom Growth Model with Unlimited Nutrients ")
 
