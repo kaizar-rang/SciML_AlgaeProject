@@ -113,3 +113,41 @@ plot!(t, data_pred[2,:], label = "UDE Nutrient Prediction", color=:orange, lines
 xlabel!("Time (days)")
 ylabel!("Concentration")
 title!("Algal Bloom Model: Original vs UDE (Neural Network Term)")
+
+
+# Assuming `AlgalBloomUDE!` and `predict_adjoint` functions are defined
+# and that `Algae_Data` and `Nutrient_Data` arrays are available from your initial full dataset run
+
+# Helper function to partition data and run the UDE model
+function train_and_forecast(train_percent)
+    idx_split = floor(Int, length(t) * train_percent / 100)
+    t_train = t[1:idx_split]
+    t_forecast = t[idx_split+1:end]
+
+    # Define the problem for the training phase
+    u0_train = [Algae_Data[1], Nutrient_Data[1]]  # Using the initial condition from the actual data
+    prob_train = ODEProblem(AlgalBloomUDE!, u0_train, (t[1], t[idx_split]), p0_vec)
+    sol_train = solve(prob_train, Tsit5(), saveat = t_train)
+
+    # Define the problem for the forecast phase
+    u0_forecast = [sol_train[1,end], sol_train[2,end]]  # Using the last point of training as initial condition
+    prob_forecast = ODEProblem(AlgalBloomUDE!, u0_forecast, (t[idx_split], t[end]), p0_vec)
+    sol_forecast = solve(prob_forecast, Tsit5(), saveat = t_forecast)
+
+    # Plotting
+    plot(t, Algae_Data, label="Underlying Data", linestyle=:dash, color=:black)
+    plot!(t_train, sol_train[1,:], label="Training Prediction (till $(train_percent)%)", color=:blue)
+    plot!(t_forecast, sol_forecast[1,:], label="Forecasting Prediction", color=:red)
+    xlabel!("Time (days)")
+    ylabel!("Algae Concentration")
+    title!("Training with $(train_percent)% of Data")
+end
+
+# Execute for each case
+train_and_forecast(90)  # Case 1
+train_and_forecast(70)  # Case 2
+train_and_forecast(50)  # Case 3
+train_and_forecast(30)  # Case 4
+train_and_forecast(10)  # Case 5
+
+display(plot())
